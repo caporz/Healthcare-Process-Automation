@@ -128,7 +128,3 @@ Esempio fittizio di ciò che il medico vede nell'email (pivot interventi, filtra
 
 - Microsoft Excel per Windows con macro abilitate (Power Query incluso)
 - Microsoft Outlook desktop
-
-## Licenza
-
-Scegli una licenza (ad esempio MIT) e aggiungi un file `LICENSE`.
