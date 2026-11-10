@@ -1,120 +1,122 @@
-# Fatturato extramoenia per medico (VBA / Excel)
+# Extramoenia Revenue by Physician (VBA / Excel)
 
-Macro VBA per calcolare il **fatturato mensile da comunicare ai medici in extramoenia**, distinguendo tra **attività di ricovero (interventi)** e **attività ambulatoriale**, e per predisporre in Outlook una **bozza di email per ciascun medico** con il dettaglio degli importi.
+VBA macro to calculate the **monthly revenue to be reported to physicians performing extramoenia activities**, distinguishing between **inpatient activities (surgical procedures)** and **outpatient activities**, and to prepare an **email draft for each physician in Outlook**, including a breakdown of the amounts.
 
-> ⚠️ Questo repository contiene **solo codice**. Non include dati reali: niente anagrafiche, importi, nominativi di medici o pazienti, indirizzi email. I dati dell'ente nel testo dell'email sono **segnaposto**.
+> ⚠️ This repository contains **code only**. It does not include any real data: no personal records, amounts, physician or patient names, or email addresses. The organization's details in the email body are **placeholders**.
 
 ---
 
-## Cosa fa
+## What It Does
 
-Ogni mese arrivano due estrazioni: gli **interventi** (ricovero) e l'**ambulatoriale**. La procedura:
+Each month, two data extracts are received: **surgical procedures** (inpatient activities) and **outpatient activities**. The procedure:
 
-1. aggiorna le due query Power Query che leggono i file delle estrazioni;
-2. somma l'importo ambulatoriale per matricola;
-3. costruisce una pivot degli interventi con filtro sul medico e, accanto, calcola il **totale da fatturare** (ambulatoriale + interventi);
-4. per ogni medico in anagrafica, filtra la pivot, ne copia la tabella come immagine e apre in Outlook un messaggio con il testo e le istruzioni di fatturazione.
+1. Refreshes the two Power Query queries that read the extraction files;
+2. Calculates the total outpatient amount for each employee ID;
+3. Creates a pivot table of inpatient procedures, filtered by physician, and calculates the **total amount to be invoiced** (outpatient + inpatient activities);
+4. For each physician listed in the master data, filters the pivot table, copies its contents as an image, and opens an Outlook message containing the relevant information and invoicing instructions.
 
 ```mermaid
 flowchart LR
-    A[File interventi] -->|Aggiorna_Interventi| B[Import interventi]
-    C[Estrazione ambulatoriale] -->|Aggiorna_Ambulatoriale| D[Import ambulatoriale]
-    D -->|PvT_Ambulatoriale| E[Pivot ambulatoriale<br/>per matricola]
-    B -->|PvT_interventi| F[Pivot interventi<br/>+ totale fattura]
+    A[Inpatient procedures file] -->|Aggiorna_Interventi| B[Import inpatient procedures]
+    C[Outpatient activity extract] -->|Aggiorna_Ambulatoriale| D[Import outpatient activities]
+    D -->|PvT_Ambulatoriale| E[Outpatient pivot<br/>by employee ID]
+    B -->|PvT_interventi| F[Inpatient pivot<br/>+ total invoice amount]
     E --> F
-    G[(Anagrafica medici)] -->|Invia_email| H[Bozze email Outlook<br/>una per medico]
+    G[(Physician master data)] -->|Invia_email| H[Outlook email drafts<br/>one per physician]
     F --> H
 ```
 
 ---
 
-## Contenuto del repository
+## Repository Contents
 
-| File | Descrizione |
+| File | Description |
 |---|---|
-| `Extramoenia.bas` | Modulo VBA con le cinque macro |
-| `README.md` | Questo documento |
+| `Extramoenia.bas` | VBA module containing the five macros |
+| `README.md` | This document |
 
-## Le cinque macro (in ordine di esecuzione)
+## The Five Macros (Execution Order)
 
-| # | Macro | Funzione |
+| # | Macro | Function |
 |---|---|---|
-| 1 | `Aggiorna_Interventi` | Chiede conferma e aggiorna la query Power Query degli interventi |
-| 2 | `Aggiorna_Ambulatoriale` | Chiede conferma e aggiorna la query Power Query dell'ambulatoriale |
-| 3 | `PvT_Ambulatoriale` | Ricrea la pivot dell'ambulatoriale: somma importo per matricola |
-| 4 | `PvT_interventi` | Ricrea la pivot degli interventi e aggiunge *Fatturato ambulatoriale* e *Totale fattura* |
-| 5 | `Invia_email` | Crea una bozza email per ogni medico con testo e tabella degli importi |
+| 1 | `Aggiorna_Interventi` | Requests confirmation and refreshes the inpatient procedures Power Query |
+| 2 | `Aggiorna_Ambulatoriale` | Requests confirmation and refreshes the outpatient activities Power Query |
+| 3 | `PvT_Ambulatoriale` | Recreates the outpatient pivot table: total amount by employee ID |
+| 4 | `PvT_interventi` | Recreates the inpatient procedures pivot table and adds *Outpatient Revenue* and *Total Invoice Amount* |
+| 5 | `Invia_email` | Creates an email draft for each physician, including the message and the amounts table |
 
-Le pivot (`PvT …`) vengono **cancellate e ricreate a ogni esecuzione**: non modificarle a mano.
+The pivot tables (`PvT …`) are **deleted and recreated each time the macros run**. Do not modify them manually.
 
 ---
 
-## Struttura attesa della cartella di lavoro
+## Expected Workbook Structure
 
-I nomi di fogli, pivot, query e campi sono costanti all'inizio del modulo: si adattano in un solo punto.
+Sheet names, pivot table names, query names, and field names are defined as constants at the beginning of the VBA module, so they can be adapted in one place.
 
-| Foglio | Contenuto |
+| Worksheet | Contents |
 |---|---|
-| `Anagrafica Medici` | Intestazioni in riga 1. Colonna **A** matricola, **B** cognome, **F** indirizzo email |
-| `Import interventi` | Caricato da Power Query: `MATRICOLA`, `Nominativo`, `Data Intervento`, `Nosologico`, `IMPORTO` (colonne A–E) |
-| `Import ambulatoriale` | Caricato da Power Query: due colonne, matricola (`Column4`) e importo (`Column8`) |
-| `PvT interventi`, `PvT ambulatoriale` | Creati dalle macro |
+| `Anagrafica Medici` | Headers in row 1. Column **A**: employee ID; **B**: surname; **F**: email address |
+| `Import interventi` | Loaded through Power Query: `MATRICOLA`, `Nominativo`, `Data Intervento`, `Nosologico`, `IMPORTO` (columns A–E) |
+| `Import ambulatoriale` | Loaded through Power Query: two columns, employee ID (`Column4`) and amount (`Column8`) |
+| `PvT interventi`, `PvT ambulatoriale` | Created by the macros |
 
-Le **query Power Query** (`Interventi`, `Ambulatoriale`) leggono file Excel esterni salvati in una cartella e **non fanno parte del codice VBA**: vanno create nella propria cartella di lavoro. La **matricola** deve coincidere nei tre elenchi (anagrafica, interventi, ambulatoriale).
+The **Power Query queries** (`Interventi`, `Ambulatoriale`) read external Excel files stored in a folder and **are not included in the VBA code**. They must be created separately in the workbook.
 
-Esempio fittizio di ciò che il medico vede nell'email (pivot interventi, filtrata sulla sua matricola):
+The **employee ID** must match across all three datasets (physician master data, inpatient procedures, and outpatient activities).
+
+Example of what a physician sees in the email (inpatient pivot table filtered by their employee ID):
 
 | MATRICOLA | 1001 | | | |
 |---|---|---|---|---|
 | **Nominativo / Nosologico** | **Somma di IMPORTO** | **Fatturato ambulatoriale** | | **Totale fattura** |
-| ROSSI MARIO | 3.000,00 | 800,00 | | 3.800,00 |
-| &nbsp;&nbsp;&nbsp;2025000123 | 1.800,00 | | | |
-| &nbsp;&nbsp;&nbsp;2025000456 | 1.200,00 | | | |
+| ROSSI MARIO | 3,000.00 | 800.00 | | 3,800.00 |
+| &nbsp;&nbsp;&nbsp;2025000123 | 1,800.00 | | | |
+| &nbsp;&nbsp;&nbsp;2025000456 | 1,200.00 | | | |
 
 ---
 
-## Come usarla
+## How to Use It
 
-1. Salva la cartella di lavoro come `.xlsm` e crea i fogli e le query descritti sopra.
-2. `Alt + F11` → `File → Importa file…` → seleziona `Extramoenia.bas`.
-3. **Sostituisci i segnaposto `ENTE_*`** in cima al modulo con i dati reali dell'ente (denominazione, P. IVA, codice SDI, PEC, sede).
-4. Copia i nuovi file di estrazione nella cartella delle query, con i nomi attesi.
-5. Esegui le macro 1–5 con `Alt + F8` o da pulsanti. Dopo le macro 3 e 4 compare un promemoria: **controlla i dati prima di proseguire**.
-6. In Outlook controlla ogni bozza e **invia manualmente**.
+1. Save the workbook as an `.xlsm` file and create the worksheets and queries described above.
+2. Press `Alt + F11` → `File → Import File…` → select `Extramoenia.bas`.
+3. **Replace the `ENTE_*` placeholders** at the beginning of the module with the organization's actual details (legal name, VAT number, SDI recipient code, certified email address (PEC), and registered office).
+4. Copy the new extraction files into the folder used by the queries, using the expected file names.
+5. Run macros 1–5 using `Alt + F8` or dedicated buttons. After macros 3 and 4, a reminder appears: **check the data before proceeding**.
+6. Review each email draft in Outlook and **send it manually**.
 
-### Dettagli sull'email
+### Email Details
 
-- Il corpo contiene il testo con le istruzioni di fatturazione elettronica (codice destinatario, PEC, dati anagrafici, sede, nota sullo split payment).
-- L'area `A1:G20` della pivot interventi viene copiata come **immagine** e incollata in fondo al messaggio, tramite l'editor Word di Outlook.
-- I messaggi vengono **solo aperti** (`.Display`): la macro non spedisce nulla.
-- Si saltano i medici senza matricola o senza email in anagrafica.
-
----
-
-## Scelte tecniche
-
-- Le due macro di aggiornamento condividono un'unica routine (`AggiornaQuery`): cambiano solo query e messaggio.
-- Le formule sono scritte con `.Formula` (sintassi inglese), quindi funzionano con Excel in qualunque lingua.
-- Le lettere accentate nel testo dell'email sono scritte con `ChrW()`: il file `.bas` resta in ASCII puro e si importa senza problemi di codifica.
-- Nessun uso di `Select`/`ActiveSheet` per costruire le pivot: si lavora su oggetti `Worksheet`/`PivotTable`.
-- Dopo l'aggiornamento di una query la macro attende il termine delle query asincrone prima di segnalare il completamento.
+- The email body contains invoicing instructions, including electronic invoicing details (recipient code, PEC address, company registration details, registered office, and a note about split payment).
+- The range `A1:G20` of the inpatient procedures pivot table is copied as an **image** and pasted at the end of the message using the Outlook Word editor.
+- Messages are **only displayed** (`.Display`): the macro does not send any emails.
+- Physicians without an employee ID or email address in the master data are skipped.
 
 ---
 
-## Limiti noti
+## Technical Design
 
-- Un medico **senza interventi** nel periodo non compare nella pivot interventi: viene saltato e **non riceve l'email**, anche se ha attività ambulatoriale.
-- Il totale da fatturare dipende dalla corrispondenza delle matricole: matricole mancanti o scritte in modo diverso tra i fogli danno importi a zero.
-- Richiede **Outlook desktop** (Windows) e una versione recente di Excel: la creazione delle pivot usa `Version:=8`, tipico di Microsoft 365.
-- L'immagine della pivot è una copia dello schermo: il foglio `PvT interventi` deve essere visibile durante l'esecuzione.
+- The two refresh macros share a single routine (`AggiornaQuery`): only the query name and message differ.
+- Formulas are written using `.Formula` (English syntax), making them compatible with Excel regardless of its display language.
+- Accented characters in the email body are encoded using `ChrW()`: the `.bas` file remains pure ASCII and can be imported without character-encoding issues.
+- No use of `Select` or `ActiveSheet` when creating pivot tables: the code works directly with `Worksheet` and `PivotTable` objects.
+- After refreshing a query, the macro waits for asynchronous queries to finish before reporting completion.
+
+---
+
+## Known Limitations
+
+- A physician **with no inpatient procedures** during the reporting period will not appear in the inpatient pivot table. As a result, that physician is skipped and **will not receive an email**, even if they have outpatient activities.
+- The total amount to be invoiced depends on matching employee IDs. Missing IDs or IDs formatted differently across worksheets may result in zero amounts.
+- Requires **Outlook desktop for Windows** and a recent version of Excel: pivot table creation uses `Version:=8`, typically associated with Microsoft 365.
+- The pivot table image is captured from the worksheet display: the `PvT interventi` worksheet must be visible while the macro is running.
 
 ---
 
 ## Privacy
 
-- Non caricare mai su GitHub la cartella di lavoro `.xlsm`/`.xlsx`, né le estrazioni o l'anagrafica. Un file Excel conserva anche dati nascosti: cache delle pivot, percorsi locali, query Power Query, metadati.
-- Per un esempio funzionante, usare solo dati inventati.
-- `.gitignore` consigliato:
+- Never upload the `.xlsm`/`.xlsx` workbook, extraction files, or physician master data to GitHub. Excel files may also retain hidden information, such as pivot table caches, local file paths, Power Query definitions, and metadata.
+- Use fictional data only when creating working examples.
+- Recommended `.gitignore`:
 
 ```gitignore
 *.xlsx
@@ -124,7 +126,7 @@ Esempio fittizio di ciò che il medico vede nell'email (pivot interventi, filtra
 ~$*
 ```
 
-## Requisiti
+## Requirements
 
-- Microsoft Excel per Windows con macro abilitate (Power Query incluso)
+- Microsoft Excel for Windows with macros enabled (including Power Query)
 - Microsoft Outlook desktop
