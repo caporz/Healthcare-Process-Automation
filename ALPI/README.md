@@ -117,7 +117,3 @@ Nell'estrazione, `desc_agenda` deve avere la forma `ROSSI MARIO (descrizione age
 ## Requisiti
 
 - Microsoft Excel per Windows (VBA abilitato)
-
-## Licenza
-
-Scegli una licenza (ad esempio MIT) e aggiungi un file `LICENSE`.
