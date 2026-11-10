@@ -131,7 +131,3 @@ Pesi e soglie sono costanti documentate in testa al modulo (`PESO_ESTERNALIZZATI
 ## Requisiti
 
 - Microsoft Excel per Windows con macro abilitate
-
-## Licenza
-
-Scegli una licenza (ad esempio MIT) e aggiungi un file `LICENSE`.
